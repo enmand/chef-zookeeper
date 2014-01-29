@@ -17,7 +17,9 @@
 # limitations under the License.
 #
 
-include_recipe "java::default"
+if node['zookeeper']['install_java']
+  include_recipe "java::default"
+end
 
 node.override['build_essential']['compiletime'] = true
 include_recipe "build-essential"
@@ -26,32 +28,54 @@ chef_gem "zookeeper"
 chef_gem "json"
 
 
-group node[:zookeeper][:group] do
+group node['zookeeper']['group'] do
   action :create
 end
 
-user node[:zookeeper][:user] do
-  gid node[:zookeeper][:group]
+user node['zookeeper']['user'] do
+  gid node['zookeeper']['group']
 end
 
-zk_basename = "zookeeper-#{node[:zookeeper][:version]}"
+zk_basename = "zookeeper-#{node['zookeeper']['version']}"
 
 remote_file ::File.join(Chef::Config[:file_cache_path], "#{zk_basename}.tar.gz") do
   owner "root"
   mode "0644"
-  source node[:zookeeper][:mirror]
-  checksum node[:zookeeper][:checksum]
+  source node['zookeeper']['mirror']
+  checksum node['zookeeper']['checksum']
   action :create
 end
 
-directory node[:zookeeper][:install_dir] do
-  owner node[:zookeeper][:user]
+directory node['zookeeper']['install_dir'] do
+  owner node['zookeeper']['user']
   mode "0755"
 end
 
-unless ::File.exists?(::File.join(node[:zookeeper][:install_dir], zk_basename))
+unless ::File.exists?(::File.join(node['zookeeper']['install_dir'], zk_basename))
   execute 'install zookeeper' do
     cwd Chef::Config[:file_cache_path]
-    command "tar -C '#{node[:zookeeper][:install_dir]}' -zxf '#{zk_basename}.tar.gz' && chown -R '#{node[:zookeeper][:user]}:#{node[:zookeeper][:group]}' #{node[:zookeeper][:install_dir]}"
+    command "tar -C '#{node['zookeeper']['install_dir']}' -zxf '#{zk_basename}.tar.gz' && chown -R '#{node['zookeeper']['user']}:#{node['zookeeper']['group']}' #{node['zookeeper']['install_dir']}"
   end
+end
+
+template "#{node['zookeeper']['install_dir']}/zookeeper-#{node['zookeeper']['version']}/conf/zoo.cfg" do
+  source "zoo.cfg.erb"
+  owner node['zookeeper']['user']
+  group node['zookeeper']['user']
+  mode '0755'
+  action :create
+end
+
+
+template "/etc/init/zookeeper.conf" do 
+  source "zookeeper.upstart.conf.erb"
+  owner "root"
+  group "root"
+  mode "0644"
+end
+
+service "zookeeper" do
+  provider Chef::Provider::Service::Upstart
+  supports start: true, restart: true, status: true
+  action [:enable, :start]
 end

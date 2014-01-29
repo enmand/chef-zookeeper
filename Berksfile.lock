@@ -1,0 +1,13 @@
+{
+  "sources": {
+    "zookeeper": {
+      "path": "."
+    },
+    "java": {
+      "locked_version": "1.19.2"
+    },
+    "build-essential": {
+      "locked_version": "1.4.2"
+    }
+  }
+}

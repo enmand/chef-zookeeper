@@ -1,0 +1,18 @@
+description "Zookeeper"
+
+limit nofile 32768 32768
+
+start on runlevel [2345]
+stop on [!12345]
+
+respawn
+respawn limit 2 5
+
+umask 007
+
+kill timeout 300
+
+setuid <%= node['zookeeper']['user'] %>
+setgid <%= node['zookeeper']['group'] %>
+
+exec <%= node['zookeeper']['install_dir'] %>/zookeeper-<%= node['zookeeper']['version'] %>/bin/zkServer.sh start-foreground
