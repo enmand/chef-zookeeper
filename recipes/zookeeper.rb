@@ -78,7 +78,7 @@ end
 server_id = node['zookeeper']['cluster'].map{|s| s.split(".").first}.find_index(node['hostname'])
 
 file "#{node['zookeeper']['data_dir']}/myid" do
-  content server_id
+  content server_id.to_s
   mode "0755"
   owner node['zookeeper']['user']
   group node['zookeeper']['group']
