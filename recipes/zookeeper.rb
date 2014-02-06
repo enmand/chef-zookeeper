@@ -71,7 +71,7 @@ template "#{node['zookeeper']['install_dir']}/zookeeper-#{node['zookeeper']['ver
   variables({
     data_dir: node['zookeeper']['data_dir'],
     data_log_dir: node['zookeeper']['data_log_dir'],
-    servers: node['zookeeper']['cluster']
+    servers: node['zookeeper']['cluster'].map{|s| "#{s}:2888:3888"}
   })
 end
 
