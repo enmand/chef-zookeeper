@@ -4,4 +4,6 @@ default['zookeeper']['checksum'] = 'e92b634e99db0414c6642f6014506cc22eefbea42cc9
 default['zookeeper']['install_dir'] = "/opt/zookeeper"
 default['zookeeper']['user'] = "zookeeper"
 default['zookeeper']['group'] = "zookeeper"
-default['zookeeper']['install_java'] = true
+default['zookeeper']['data_dir'] = "/tmp/zookeeper-data"
+default['zookeeper']['data_log_dir'] = "/tmp/zookeeper-log"
+default['zookeeper']['cluster'] = []

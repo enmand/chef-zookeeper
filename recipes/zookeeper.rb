@@ -17,16 +17,13 @@
 # limitations under the License.
 #
 
-if node['zookeeper']['install_java']
-  include_recipe "java::default"
-end
+include_recipe "java::default"
 
 node.override['build_essential']['compiletime'] = true
 include_recipe "build-essential"
 
 chef_gem "zookeeper"
 chef_gem "json"
-
 
 group node['zookeeper']['group'] do
   action :create
@@ -46,9 +43,16 @@ remote_file ::File.join(Chef::Config[:file_cache_path], "#{zk_basename}.tar.gz")
   action :create
 end
 
-directory node['zookeeper']['install_dir'] do
-  owner node['zookeeper']['user']
-  mode "0755"
+[
+  node['zookeeper']['data_dir'],
+  node['zookeeper']['install_dir'], 
+  node['zookeeper']['data_log_dir']
+].each do |dir|
+  directory dir  do
+    owner node['zookeeper']['user']
+    group node['zookeeper']['group']
+    mode "0755"
+  end
 end
 
 unless ::File.exists?(::File.join(node['zookeeper']['install_dir'], zk_basename))
@@ -61,11 +65,26 @@ end
 template "#{node['zookeeper']['install_dir']}/zookeeper-#{node['zookeeper']['version']}/conf/zoo.cfg" do
   source "zoo.cfg.erb"
   owner node['zookeeper']['user']
-  group node['zookeeper']['user']
+  group node['zookeeper']['group']
   mode '0755'
   action :create
+  variables({
+    data_dir: node['zookeeper']['data_dir'],
+    data_log_dir: node['zookeeper']['data_log_dir'],
+    servers: node['zookeeper']['cluster']
+  })
 end
 
+server_id = node['zookeeper']['cluster'].find_index(node['hostname'])
+
+file "#{node['zookeeper']['data_dir']}/myid" do
+  content server_id
+  mode "0755"
+  owner node['zookeeper']['user']
+  group node['zookeeper']['group']
+  action :create
+end
+        
 
 template "/etc/init/zookeeper.conf" do 
   source "zookeeper.upstart.conf.erb"
