@@ -75,7 +75,7 @@ template "#{node['zookeeper']['install_dir']}/zookeeper-#{node['zookeeper']['ver
   })
 end
 
-server_id = node['zookeeper']['cluster'].find_index(node['hostname'])
+server_id = node['zookeeper']['cluster'].map{|s| s.split(".").first}.find_index(node['hostname'])
 
 file "#{node['zookeeper']['data_dir']}/myid" do
   content server_id
