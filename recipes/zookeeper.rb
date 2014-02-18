@@ -62,6 +62,21 @@ unless ::File.exists?(::File.join(node['zookeeper']['install_dir'], zk_basename)
   end
 end
 
+if node['zookeeper']['version'] == "3.3.6"
+  template "/etc/cron.daily/zookeeper_clean_up" do
+    source "cleanup.cron.sh.erb"
+    mode "0755"
+    owner "root"
+    group "root"
+    action :create
+    variables({
+      data_log_dir: node['zookeeper']['data_log_dir'],
+      data_dir: node['zookeeper']['data_dir'],
+      no_snapshots: node['zookeeper']['no_snapshots']
+    })
+  end
+end
+
 template "#{node['zookeeper']['install_dir']}/zookeeper-#{node['zookeeper']['version']}/conf/zoo.cfg" do
   source "zoo.cfg.erb"
   owner node['zookeeper']['user']

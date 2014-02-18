@@ -1,0 +1,1 @@
+java -cp zookeeper.jar:log4j.jar:conf org.apache.zookeeper.service.PurgeTxnLog <%= @data_log_dir %> <%= @data_dir %> -n <% @no_snapshots %>

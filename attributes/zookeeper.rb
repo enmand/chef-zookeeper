@@ -6,4 +6,5 @@ default['zookeeper']['user'] = "zookeeper"
 default['zookeeper']['group'] = "zookeeper"
 default['zookeeper']['data_dir'] = "/tmp/zookeeper-data"
 default['zookeeper']['data_log_dir'] = "/tmp/zookeeper-log"
+default['zookeeper']['no_snapshots'] = 3
 default['zookeeper']['cluster'] = []
