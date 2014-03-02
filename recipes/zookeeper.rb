@@ -52,6 +52,7 @@ end
     owner node['zookeeper']['user']
     group node['zookeeper']['group']
     mode "0755"
+    action :create
   end
 end
 
