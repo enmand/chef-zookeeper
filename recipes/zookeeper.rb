@@ -57,6 +57,11 @@ end
 end
 
 if node['zookeeper']['data_device']
+  execute "mkfs" do
+    command "mkfs -t ext4 #{node['zookeeper']['data_device']}"
+    not_if "grep -qs #{node['zookeeper']['data_dir']} /proc/mounts"
+  end
+
   mount node['zookeeper']['data_dir'] do
     device node['zookeeper']['data_device']
     fstype "ext4"
@@ -65,6 +70,11 @@ if node['zookeeper']['data_device']
 end
 
 if node['zookeeper']['data_log_device']
+  execute "mkfs" do
+    command "mkfs -t ext4 #{node['zookeeper']['data_log_device']}"
+    not_if "grep -qs #{node['zookeeper']['data_log_dir']} /proc/mounts"
+  end
+
   mount node['zookeeper']['data_log_dir'] do
     device node['zookeeper']['data_log_device']
     fstype "ext4"
