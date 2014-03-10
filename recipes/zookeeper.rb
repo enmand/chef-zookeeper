@@ -56,6 +56,22 @@ end
   end
 end
 
+if node['zookeeper']['data_device']
+  mount node['zookeeper']['data_dir'] do
+    device node['zookeeper']['data_device']
+    fstype "ext4"
+    action [:mount, :enable]
+  end
+end
+
+if node['zookeeper']['data_log_device']
+  mount node['zookeeper']['data_log_dir'] do
+    device node['zookeeper']['data_log_device']
+    fstype "ext4"
+    action [:mount, :enable]
+  end
+end
+
 unless ::File.exists?(::File.join(node['zookeeper']['install_dir'], zk_basename))
   execute 'install zookeeper' do
     cwd Chef::Config[:file_cache_path]
