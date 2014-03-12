@@ -19,9 +19,9 @@ exec <%= node['zookeeper']['install_dir'] %>/zookeeper-<%= node['zookeeper']['ve
 
 post-start script
   PID=`status zookeeper | egrep -oi '([0-9]+)$' | head -n1`
-  echo $PID > /var/run/zk/zookeeper.pid
+  echo $PID > /opt/zookeeper/zookeeper.pid
 end script
 
 post-stop script
-  rm -f /var/run/zk/zookeeper.pid
+  rm -f /opt/zookeeper/zookeeper.pid
 end script
