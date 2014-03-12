@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-include_recipe "java::default"
+include_recipe "java"
 
 group node['zookeeper']['group'] do
   action :create
@@ -25,6 +25,15 @@ end
 
 user node['zookeeper']['user'] do
   gid node['zookeeper']['group']
+end
+
+# Directory for pid file to process doesn't need to be run as root
+
+directory "/var/run/zk" do
+  owner node['zookeeper']['user']
+  group node['zookeeper']['group']
+  mode "0755"
+  action :create
 end
 
 zk_basename = "zookeeper-#{node['zookeeper']['version']}"
@@ -51,7 +60,7 @@ end
 end
 
 if node['zookeeper']['data_device'] && node['zookeeper']['data_log_device']
-  include_recipe zookeeper::devices
+  include_recipe "zookeeper::devices"
 end
 
 unless ::File.exists?(::File.join(node['zookeeper']['install_dir'], zk_basename))
@@ -76,8 +85,6 @@ if node['zookeeper']['version'] == "3.3.6"
   end
 end
 
-cluster = search(:node, 'role:zookeeper').map{|n| n['fqdn']}.sort
-
 template "#{node['zookeeper']['install_dir']}/zookeeper-#{node['zookeeper']['version']}/conf/zoo.cfg" do
   source "zoo.cfg.erb"
   owner node['zookeeper']['user']
@@ -87,11 +94,13 @@ template "#{node['zookeeper']['install_dir']}/zookeeper-#{node['zookeeper']['ver
   variables({
     data_dir: node['zookeeper']['data_dir'],
     data_log_dir: node['zookeeper']['data_log_dir'],
-    servers: cluster.map{|s| "#{s}:2888:3888"}
+    servers: node['zookeeper']['cluster'].map{|s| "#{s}:2888:3888"}
   })
 end
 
-server_id = cluster.find_index(node['fqdn'])
+server_id = node['zookeeper']['cluster'].find_index(node['fqdn'])
+
+server_id = node['zookeeper']['cluster'].map{|n| n.split(".").first}.find_index(node['hostname']) unless server_id
 
 file "#{node['zookeeper']['data_dir']}/myid" do
   content server_id.to_s
@@ -100,7 +109,6 @@ file "#{node['zookeeper']['data_dir']}/myid" do
   group node['zookeeper']['group']
   action :create
 end
-        
 
 template "/etc/init/zookeeper.conf" do 
   source "zookeeper.upstart.conf.erb"
