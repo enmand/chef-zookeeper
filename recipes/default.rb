@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: zookeeper
-# Recipe:: zookeeper
+# Recipe:: default 
 #
 # Copyright 2013, Simple Finance Technology Corp.
 #
@@ -18,9 +18,6 @@
 #
 
 include_recipe "java::default"
-
-node.override['build_essential']['compiletime'] = true
-include_recipe "build-essential"
 
 group node['zookeeper']['group'] do
   action :create
@@ -53,30 +50,8 @@ end
   end
 end
 
-if node['zookeeper']['data_device']
-  execute "mkfs" do
-    command "mkfs -t ext4 #{node['zookeeper']['data_device']}"
-    not_if "grep -qs #{node['zookeeper']['data_dir']} /proc/mounts"
-  end
-
-  mount node['zookeeper']['data_dir'] do
-    device node['zookeeper']['data_device']
-    fstype "ext4"
-    action [:mount, :enable]
-  end
-end
-
-if node['zookeeper']['data_log_device']
-  execute "mkfs" do
-    command "mkfs -t ext4 #{node['zookeeper']['data_log_device']}"
-    not_if "grep -qs #{node['zookeeper']['data_log_dir']} /proc/mounts"
-  end
-
-  mount node['zookeeper']['data_log_dir'] do
-    device node['zookeeper']['data_log_device']
-    fstype "ext4"
-    action [:mount, :enable]
-  end
+if node['zookeeper']['data_device'] && node['zookeeper']['data_log_device']
+  include_recipe zookeeper::devices
 end
 
 unless ::File.exists?(::File.join(node['zookeeper']['install_dir'], zk_basename))
@@ -101,6 +76,8 @@ if node['zookeeper']['version'] == "3.3.6"
   end
 end
 
+cluster = search(:node, 'role:zookeeper').map{|n| n['fqdn']}.sort
+
 template "#{node['zookeeper']['install_dir']}/zookeeper-#{node['zookeeper']['version']}/conf/zoo.cfg" do
   source "zoo.cfg.erb"
   owner node['zookeeper']['user']
@@ -110,11 +87,11 @@ template "#{node['zookeeper']['install_dir']}/zookeeper-#{node['zookeeper']['ver
   variables({
     data_dir: node['zookeeper']['data_dir'],
     data_log_dir: node['zookeeper']['data_log_dir'],
-    servers: node['zookeeper']['cluster'].map{|s| "#{s}:2888:3888"}
+    servers: cluster.map{|s| "#{s}:2888:3888"}
   })
 end
 
-server_id = node['zookeeper']['cluster'].map{|s| s.split(".").first}.find_index(node['hostname'])
+server_id = cluster.find_index(node['fqdn'])
 
 file "#{node['zookeeper']['data_dir']}/myid" do
   content server_id.to_s
