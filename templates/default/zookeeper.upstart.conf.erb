@@ -16,3 +16,12 @@ setuid <%= node['zookeeper']['user'] %>
 setgid <%= node['zookeeper']['group'] %>
 
 exec <%= node['zookeeper']['install_dir'] %>/zookeeper-<%= node['zookeeper']['version'] %>/bin/zkServer.sh start-foreground
+
+post-start script
+  PID=`status zookeeper | egrep -oi '([0-9]+)$' | head -n1`
+  echo $PID > /var/run/zk/zookeeper.pid
+end script
+
+post-stop script
+  rm -f /var/run/zk/zookeeper.pid
+end script

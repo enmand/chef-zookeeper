@@ -27,15 +27,6 @@ user node['zookeeper']['user'] do
   gid node['zookeeper']['group']
 end
 
-# Directory for pid file to process doesn't need to be run as root
-
-directory "/var/run/zk" do
-  owner node['zookeeper']['user']
-  group node['zookeeper']['group']
-  mode "0755"
-  action :create
-end
-
 zk_basename = "zookeeper-#{node['zookeeper']['version']}"
 
 remote_file ::File.join(Chef::Config[:file_cache_path], "#{zk_basename}.tar.gz") do
@@ -56,6 +47,7 @@ end
     group node['zookeeper']['group']
     mode "0755"
     action :create
+    recursive true
   end
 end
 
